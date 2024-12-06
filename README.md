@@ -18,7 +18,7 @@ This repository demonstrates how to integrate and use the [PortalSwift SDK](http
 
 1. **Flutter Setup**: Ensure Flutter is installed on your system. Refer to the [Flutter installation guide](https://docs.flutter.dev/get-started/install).
 2. **iOS Environment**: Xcode must be installed for iOS development.
-3. **Client API Key**: Obtain an Client API key from [Portal Dashboard](https://app.portalhq.io/dashboard).
+3. **Client API Key**: Obtain Client API key from [Portal Dashboard](https://app.portalhq.io/dashboard).
 
 ---
 
