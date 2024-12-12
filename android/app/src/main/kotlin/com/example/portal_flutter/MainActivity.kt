@@ -26,7 +26,6 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, Constants.FLUTTER_CHANNEL_NAME)
             .setMethodCallHandler { call, result ->
-                Log.d("Flutter", "Method call: ${call.method}")
                 println("Flutter: Method call: ${call.method}")
                 handleFlutterMethodCall(call, result)
             }
