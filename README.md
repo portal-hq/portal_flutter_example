@@ -4,6 +4,8 @@
 
 This repository demonstrates how to integrate and use the Portal iOS and Portal Android SDK in a Flutter application. It provides a simple interface to initialize the Portal SDK and create a wallet, showcasing a straightforward use case for developers.
 
+![Android Demo](demo/android-demo.gif)
+
 ---
 
 ## Features
