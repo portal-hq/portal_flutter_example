@@ -2,7 +2,7 @@
 
 # Portal Flutter SDK Example
 
-This repository demonstrates how to integrate and use the [PortalSwift SDK](https://github.com/portal-hq/PortalSwift) in a Flutter application for iOS. It provides a simple interface to initialize the Portal SDK and create a wallet, showcasing a straightforward use case for developers.
+This repository demonstrates how to integrate and use the Portal iOS and Portal Android SDK in a Flutter application. It provides a simple interface to initialize the Portal SDK and create a wallet, showcasing a straightforward use case for developers.
 
 ---
 
@@ -18,7 +18,8 @@ This repository demonstrates how to integrate and use the [PortalSwift SDK](http
 
 1. **Flutter Setup**: Ensure Flutter is installed on your system. Refer to the [Flutter installation guide](https://docs.flutter.dev/get-started/install).
 2. **iOS Environment**: Xcode must be installed for iOS development.
-3. **Client API Key**: Obtain Client API key from [Portal Dashboard](https://app.portalhq.io/dashboard).
+3. **Android Environment**: Follow [the official Flutter guide](https://docs.flutter.dev/get-started/install/macos/mobile-android) on setting up Android for Flutter.
+4. **Client API Key**: Obtain Client API key from [Portal Dashboard](https://app.portalhq.io/dashboard).
 
 ---
 
@@ -41,7 +42,7 @@ flutter pub get
 
 
 ### 3. Configure the API Key
-Update the `initializePortal` method in the `PortalExample` class with your PortalSwift API key:
+Update the `initializePortal` method in the `PortalExample` class with your Portal client API key:
 
 ```dart
 const apiKey = "your-api-key";
@@ -50,7 +51,7 @@ await platform.invokeMethod('initializePortal', apiKey);
 
 
 ### 4. Run the App
-Run the Flutter app on an iOS simulator or a physical device:
+Run the Flutter app:
 
 ```bash
 flutter run
@@ -62,7 +63,7 @@ flutter run
 ## Key Features
 
 #### 1. Initializing the Portal SDK
-On app startup, users are prompted to initialize the Portal SDK. This is handled via a Flutter `MethodChannel`, invoking the native iOS `initializePortal` method.
+On app startup, users are prompted to initialize the Portal SDK. This is handled via a Flutter `MethodChannel`, invoking the native `initializePortal` method on the corresponding iOS and Android platform.
 
 ### 2. Creating a Wallet
 Once initialized, users can create a wallet with Ethereum and Solana addresses. The app displays the addresses upon successful wallet creation.
@@ -70,8 +71,8 @@ Once initialized, users can create a wallet with Ethereum and Solana addresses. 
 ---
 
 ## Documentation
-For detailed documentation on integrating the PortalSwift SDK in a Flutter application, refer to the [PortalSwift Flutter iOS Integration Guide](https://docs.portalhq.io/resources/flutter-ios).
-
+- For detailed documentation on integrating the PortalSwift SDK in a Flutter application, refer to the [PortalSwift Flutter iOS Integration Guide](https://docs.portalhq.io/resources/flutter-ios).
+- For detailed documentation on integrating the Portal Android SDK in a Flutter application, refer to the [Portal Android SDK Flutter Integration Guide](https://docs.portalhq.io/resources/flutter-android).
 
 ---
 
