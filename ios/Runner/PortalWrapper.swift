@@ -10,18 +10,47 @@ import PortalSwift
 
 class PortalWrapper {
     static var portal: Portal?
+    static var isPasswordRecoverAvailable: Bool = false
     
-    static func initializePortal(apiKey: String, result: @escaping FlutterResult) {
+    // MARK: - Helper Methods
+    
+    static func mapBackupMethod(from method: String) -> BackupMethods {
+        switch method.uppercased() {
+        case "PASSWORD":
+            return .Password
+        case "GDRIVE":
+            return .GoogleDrive
+        case "ICLOUD":
+            return .iCloud
+        case "CUSTOM":
+            return .local
+        case "PASSKEY":
+            return .Passkey
+        case "UNKNOWN":
+            return .Unknown
+        default:
+            return .Password
+        }
+    }
+    
+    // MARK: - Portal SDK Methods
+    
+    static func initializePortal(apiKey: String, rpcConfig: [String: String]?, autoApprove: Bool, result: @escaping FlutterResult) {
         // Initialize portal here using the portal iOS SDK
         Task {
             do {
                 portal = try Portal(
                     apiKey,
-                    withRpcConfig: [
+                    withRpcConfig: rpcConfig ?? [
                         "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" : "https://api.mainnet-beta.solana.com",
                         "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": "https://api.devnet.solana.com"
-                    ]
+                    ],
+                    autoApprove: autoApprove
                 )
+                
+                // Check if password recovery is available
+                let recoveryMethods = try await portal!.availableRecoveryMethods()
+                isPasswordRecoverAvailable = recoveryMethods.contains(.Password)
                 
                 result([
                     "success": true,
@@ -62,4 +91,93 @@ class PortalWrapper {
             }
         }
     }
+    
+    static func isPasswordRecoverAvailable(result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let isPasswordRecoverAvailable = try await portal.availableRecoveryMethods().contains(.Password) ?? false
+                result(isPasswordRecoverAvailable)
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error getting recovery methods: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+    
+    static func setPassword(password: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                try portal.setPassword(password)
+                result(["success": true])
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error setting password: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+    
+    static func backupWallet(method: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let backupMethod = mapBackupMethod(from: method)
+                _ = try await portal.backupWallet(backupMethod)
+                result(["success": true])
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error backing up wallet: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+    
+    static func recoverWallet(method: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let recoverMethod = mapBackupMethod(from: method)
+                let wallets = try await portal.recoverWallet(recoverMethod)
+                result([
+                    "success": true,
+                    "addresses": [
+                        "ethereum": wallets.ethereum ?? "",
+                        "solana": wallets.solana ?? ""
+                    ]
+                ])
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error recovering wallet: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+
 }
