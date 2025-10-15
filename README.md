@@ -7,6 +7,7 @@ This repository demonstrates how to integrate and use the Portal iOS and Portal 
 ## 🚀 What's Included
 
 - **Complete Wallet Management**: Create, backup, and recover wallets
+- **Token Swapping**: Swap tokens using Portal's swap functionality (iOS only)
 - **Cross-Platform Support**: Full iOS and Android implementation
 
 
@@ -19,7 +20,9 @@ This repository demonstrates how to integrate and use the Portal iOS and Portal 
 - **🔐 Wallet Creation**: Generate wallets with Ethereum and Solana addresses
 - **💾 Secure Backup**: Password-encrypted wallet backup to Portal servers
 - **🔄 Wallet Recovery**: Restore wallets using password authentication
+- **🔄 Token Swapping**: Swap tokens using Portal's swap functionality
 - **📱 Cross-Platform**: Identical functionality on iOS and Android
+- **⚡ Loading States**: Professional UI with loading indicators for all operations
 
 ---
 
@@ -81,6 +84,7 @@ flutter run
 1. **Create Wallet**: Generate a new wallet with Ethereum and Solana addresses
 2. **Backup Wallet**: Set a password and backup your wallet
 3. **Recover Wallet**: Test wallet recovery using your password
+4. **Swap Tokens**: Test token swapping (iOS only)
 
 
 ---
@@ -136,15 +140,29 @@ Check if password-based recovery is available for the current wallet state.
 **Method:** `isPasswordRecoverAvailable`  
 **Returns:** `boolean` (availability status)
 
+#### 7. Token Swapping
+Swap tokens using Portal's swap functionality (iOS only). Android returns a "not supported" error.
+
+**Method Channel:** `portal_flutter/portal`  
+**Method:** `swap`  
+**Parameters:** `{swapsApiKey: String, chainId: String, buyToken: String, sellToken: String, amount: String}`  
+**Returns:** `{success: boolean, transactionHash: String}` (iOS) or error (Android)
+
+**Note:** The UI provides pre-filled defaults:
+- **Buy Token**: USDC
+- **Sell Token**: ETH  
+- **Amount**: 10000000000000 Wei (0.00001 ETH)
+- **Chain ID**: eip155:8453 (Base)
+
 ---
 
 ## 🏗️ Architecture
 
 ### Cross-Platform Implementation
-Full feature parity between iOS and Android platforms:
+Feature parity between iOS and Android platforms:
 
-- **iOS**: PortalSwift SDK with Swift
-- **Android**: Portal Android SDK with Kotlin
+- **iOS**: PortalSwift SDK with Swift (full functionality including swaps)
+- **Android**: Portal Android SDK with Kotlin (wallet management only, swaps not supported in this example so far)
 - **Flutter**: Dart UI layer with MethodChannel communication
 
 ### Error Handling
