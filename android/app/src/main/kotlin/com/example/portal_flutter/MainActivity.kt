@@ -42,6 +42,7 @@ class MainActivity : FlutterActivity() {
             Constants.METHOD_SET_PASSWORD -> PortalWrapper.setPassword(call.arguments, result)
             Constants.METHOD_BACKUP_WALLET -> PortalWrapper.backupWallet(call.arguments, result)
             Constants.METHOD_RECOVER_WALLET -> PortalWrapper.recoverWallet(call.arguments, result)
+            Constants.METHOD_SWAP -> PortalWrapper.swap(call.arguments, result)
         }
     }
 

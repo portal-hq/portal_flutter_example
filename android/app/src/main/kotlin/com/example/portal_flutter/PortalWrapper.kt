@@ -244,6 +244,34 @@ object PortalWrapper {
         }
     }
 
+    fun swap(arguments: Any?, result: MethodChannel.Result) {
+        if (!this::portal.isInitialized) {
+            result.error("UNAVAILABLE", "Portal is not initialized", null)
+            return
+        }
+
+        if (arguments == null || arguments !is Map<*, *>) {
+            result.error("FAILED", "Missing or invalid swap arguments", null)
+            return
+        }
+
+        val args = arguments as Map<String, Any>
+        val swapsApiKey = args["swapsApiKey"] as? String
+        val chainId = args["chainId"] as? String
+        val buyToken = args["buyToken"] as? String
+        val sellToken = args["sellToken"] as? String
+        val amount = args["amount"] as? String
+
+        if (swapsApiKey.isNullOrBlank() || chainId.isNullOrBlank() || 
+            buyToken.isNullOrBlank() || sellToken.isNullOrBlank() || amount.isNullOrBlank()) {
+            result.error("FAILED", "Missing required swap parameters", null)
+            return
+        }
+
+        // Dummy implementation that always fails immediately
+        result.error("SWAP_NOT_SUPPORTED", "Swap functionality is not implemented on Android yet", null)
+    }
+
     fun close() {
         coroutineScope.cancel()
     }

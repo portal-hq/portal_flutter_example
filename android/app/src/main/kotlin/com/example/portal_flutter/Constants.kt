@@ -8,4 +8,5 @@ object Constants {
     const val METHOD_SET_PASSWORD = "setPassword"
     const val METHOD_BACKUP_WALLET = "backupWallet"
     const val METHOD_RECOVER_WALLET = "recoverWallet"
+    const val METHOD_SWAP = "swap"
 }
