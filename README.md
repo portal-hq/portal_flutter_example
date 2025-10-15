@@ -13,6 +13,8 @@ This repository demonstrates how to integrate and use the Portal iOS and Portal 
 
 ![iOS Demo](demo/flutter-demo.gif)
 
+![iOS Swap Demo](demo/flutter-swap-demo.gif)
+
 ---
 
 ## ✨ Features
