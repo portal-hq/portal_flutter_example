@@ -27,7 +27,7 @@ import UIKit
                     print(call.arguments)
                     if let args = call.arguments as? [String: Any],
                        let apiKey = args["apiKey"] as? String {
-                        PortalWrapper.initializePortal(apiKey: apiKey, rpcConfig: args["rpcConfig"] as? [String: String], autoApprove: args["autoApprove"] as? Bool ?? true, result: result)
+                        PortalWrapper.initializePortal(apiKey: apiKey, rpcConfig: args["rpcConfig"] as? [String: String] ?? [:], autoApprove: args["autoApprove"] as? Bool ?? true, result: result)
                     } else {
                         result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for initializePortal", details: nil))
                     }
@@ -58,6 +58,18 @@ import UIKit
                         PortalWrapper.recoverWallet(method: method, result: result)
                     } else {
                         result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected a String for recovery method", details: nil))
+                    }
+
+                case "swap":
+                    if let args = call.arguments as? [String: Any],
+                       let swapsApiKey = args["swapsApiKey"] as? String,
+                       let chainId = args["chainId"] as? String,
+                       let buyToken = args["buyToken"] as? String,
+                       let sellToken = args["sellToken"] as? String,
+                       let amount = args["amount"] as? String {
+                        PortalWrapper.swap(swapsApiKey: swapsApiKey, chainId: chainId, buyToken: buyToken, sellToken: sellToken, amount: amount, result: result)
+                    } else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for swap", details:   nil))
                     }
 
                 default:

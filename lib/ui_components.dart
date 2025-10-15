@@ -225,6 +225,8 @@ class PortalWalletView extends StatefulWidget {
   final VoidCallback? onCopyAddressClick;
   final VoidCallback? onCopyEthereumAddressClick;
   final Function(String)? onBackupWalletClick;
+  final Function(String buyToken, String sellToken, String amount)? onSwapClick;
+  final bool isSwapLoading;
 
   const PortalWalletView({
     Key? key,
@@ -233,6 +235,8 @@ class PortalWalletView extends StatefulWidget {
     this.onCopyAddressClick,
     this.onCopyEthereumAddressClick,
     this.onBackupWalletClick,
+    this.onSwapClick,
+    this.isSwapLoading = false,
   }) : super(key: key);
 
   @override
@@ -242,6 +246,10 @@ class PortalWalletView extends StatefulWidget {
 class _PortalWalletViewState extends State<PortalWalletView> {
   bool showPasswordAlert = false;
   String backupPassword = '';
+  bool showSwapAlert = false;
+  String buyToken = 'USDC';
+  String sellToken = 'ETH';
+  String amount = '10000000000000';
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +351,36 @@ class _PortalWalletViewState extends State<PortalWalletView> {
 
           // Password alert
           if (showPasswordAlert) _buildPasswordAlert(),
+
+          const SizedBox(height: 12),
+
+          // Swap button
+          Align(
+            alignment: Alignment.center,
+            child: widget.isSwapLoading
+                ? const SizedBox(
+                    width: 160,
+                    height: 42,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(PortalColors.portalBlue),
+                      ),
+                    ),
+                  )
+                : PortalButton(
+                    title: "Swap",
+                    onPress: () {
+                      setState(() {
+                        showSwapAlert = true;
+                      });
+                    },
+                    width: 160,
+                    height: 42,
+                    cornerRadius: 21,
+                  ),
+          ),
+
+          if (showSwapAlert) _buildSwapAlert(),
         ],
       ),
     );
@@ -384,6 +422,81 @@ class _PortalWalletViewState extends State<PortalWalletView> {
             });
           },
           child: const Text("Submit"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSwapAlert() {
+    return AlertDialog(
+      title: const Text("Swap"),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              onChanged: (v) => buyToken = v,
+              controller: TextEditingController(text: "USDC"),
+              decoration: const InputDecoration(
+                labelText: "Buy Token",
+                hintText: "e.g. USDC",
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (v) => sellToken = v,
+              controller: TextEditingController(text: "ETH"),
+              decoration: const InputDecoration(
+                labelText: "Sell Token",
+                hintText: "e.g. ETH",
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (v) => amount = v,
+              controller: TextEditingController(text: "10000000000000"),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Amount in Wei",
+                hintText: "Enter amount in Wei",
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() {
+              showSwapAlert = false;
+            });
+          },
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: widget.isSwapLoading ? null : () async {
+            try {
+              await widget.onSwapClick?.call(buyToken, sellToken, amount);
+              setState(() {
+                showSwapAlert = false;
+              });
+            } catch (e) {
+              // Error handling is done in the viewmodel
+              setState(() {
+                showSwapAlert = false;
+              });
+            }
+          },
+          child: widget.isSwapLoading 
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(PortalColors.portalBlue),
+                  ),
+                )
+              : const Text("Submit"),
         ),
       ],
     );

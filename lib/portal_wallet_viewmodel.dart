@@ -15,6 +15,8 @@ class PortalWalletViewModel extends ChangeNotifier {
   
   // Properties matching Swift implementation
   String clientAPIKey = Constants.PORTAL_CLIENT_API_KEY;
+  String swapsApiKey = Constants.SWAPS_API_KEY;
+  String swapsChainId = "eip155:8453"; // Base
   bool isPasswordRecoverAvailable = false;
   String? solanaAddress;
   String? ethereumAddress;
@@ -23,9 +25,11 @@ class PortalWalletViewModel extends ChangeNotifier {
   // UI State
   WalletUIState _state = WalletUIState.loading;
   String? _errorMessage;
+  bool _isSwapLoading = false;
 
   WalletUIState get state => _state;
   String? get errorMessage => _errorMessage;
+  bool get isSwapLoading => _isSwapLoading;
 
   PortalWalletViewModel() {
     initializePortal();
@@ -113,6 +117,35 @@ class PortalWalletViewModel extends ChangeNotifier {
     } catch (e) {
       _setState(WalletUIState.portalInitialized);
       print("❌ Unable to recover the wallet with error: $e");
+    }
+  }
+
+  // MARK: - Swap
+  Future<void> swap(String buyToken, String sellToken, String amount) async {
+    _isSwapLoading = true;
+    notifyListeners();
+    
+    try {
+      final swapResult = await platform.invokeMethod('swap', {
+        'swapsApiKey': swapsApiKey,
+        'chainId': swapsChainId,
+        'buyToken': buyToken,
+        'sellToken': sellToken,
+        'amount': amount,
+      });
+
+      print("✅ swap result: $swapResult");
+      
+      // Store transaction hash if available
+      if (swapResult != null && swapResult is Map && swapResult['transactionHash'] != null) {
+        transactionHash = swapResult['transactionHash'];
+      }
+    } catch (e) {
+      print("❌ Swap failed: $e");
+      rethrow;
+    } finally {
+      _isSwapLoading = false;
+      notifyListeners();
     }
   }
 

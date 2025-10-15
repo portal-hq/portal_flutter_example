@@ -158,6 +158,10 @@ class _PortalHackathonKitState extends State<PortalHackathonKit> {
                         onBackupWalletClick: (password) {
                           portalWalletViewModel.backupWallet(password);
                         },
+                        onSwapClick: (buyToken, sellToken, amount) {
+                          portalWalletViewModel.swap(buyToken, sellToken, amount);
+                        },
+                        isSwapLoading: portalWalletViewModel.isSwapLoading,
                       ),
 
                       const SizedBox(height: 30),

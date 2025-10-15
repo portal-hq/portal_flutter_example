@@ -35,16 +35,13 @@ class PortalWrapper {
     
     // MARK: - Portal SDK Methods
     
-    static func initializePortal(apiKey: String, rpcConfig: [String: String]?, autoApprove: Bool, result: @escaping FlutterResult) {
+    static func initializePortal(apiKey: String, rpcConfig: [String: String] = [:], autoApprove: Bool = true, result: @escaping FlutterResult) {
         // Initialize portal here using the portal iOS SDK
         Task {
             do {
                 portal = try Portal(
                     apiKey,
-                    withRpcConfig: rpcConfig ?? [
-                        "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" : "https://api.mainnet-beta.solana.com",
-                        "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1": "https://api.devnet.solana.com"
-                    ],
+                    withRpcConfig: rpcConfig,
                     autoApprove: autoApprove
                 )
                 
@@ -180,4 +177,57 @@ class PortalWrapper {
         }
     }
 
+    static func swap(swapsApiKey: String, chainId: String, buyToken: String, sellToken: String, amount: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+
+        let swaps: PortalSwapsProtocol = PortalSwaps(apiKey: swapsApiKey, portal: portal)
+
+        Task {
+
+            let quoteArgs = QuoteArgs(
+                buyToken: buyToken,
+                sellToken: sellToken,
+                sellAmount: amount
+            )
+
+            let quoteResult: Quote
+            do {
+                quoteResult = try await swaps.getQuote(args: quoteArgs, forChainId: chainId)
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Unable to get quote with error: \(error.localizedDescription)",
+                                    details: nil))
+                return
+            }
+
+            do {
+                let sendTransactionResponse = try await portal.request(
+                    chainId,
+                    withMethod: .eth_sendTransaction,
+                    andParams: [quoteResult.transaction]
+                )
+
+                guard let transactionHash = sendTransactionResponse.result as? String else {
+                    result(FlutterError(code: "FAILED",
+                                        message: "Swap failed: Invalid response type for request",
+                                        details: nil))
+                    return
+                }
+
+                result([
+                    "success": true,
+                    "transactionHash": transactionHash
+                ])
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Swap failed: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
 }
