@@ -230,4 +230,95 @@ class PortalWrapper {
             }
         }
     }
+    static func eject(backupMethod: String, custodianApiKey: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let method = mapBackupMethod(from: backupMethod)
+                
+                // 1. Get Wallet ID
+                guard let walletId = try await getWalletId(for: method) else {
+                    result(FlutterError(code: "FAILED",
+                                        message: "Could not find wallet for backup method: \(backupMethod)",
+                                        details: nil))
+                    return
+                }
+                
+                // 2. Prepare Eject (Call Portal API)
+                try await prepareEject(walletId: walletId, custodianApiKey: custodianApiKey)
+                
+                // 3. Eject
+                print("Attempting to eject private keys...")
+                let privateKeys = try await portal.ejectPrivateKeys(method)
+                print("Eject successful. Private Keys: \(privateKeys)")
+                
+                var mappedKeys: [String: String] = [:]
+
+                if let keysDict = privateKeys as? [PortalNamespace: String] {
+                    for (namespace, key) in keysDict {
+                        mappedKeys[namespace.rawValue] = key
+                    }
+                    result(mappedKeys)
+                } else {
+                    let description = String(describing: privateKeys)
+                    result(description)
+                }
+            } catch {
+                print("Eject failed with error: \(error)")
+                result(FlutterError(code: "FAILED",
+                                    message: "Error ejecting wallet: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+    
+    private static func getWalletId(for method: BackupMethods) async throws -> String? {
+        guard let portal = portal else { return nil }
+        guard let client = try await portal.client else { return nil }
+        
+        for wallet in client.wallets {
+            if wallet.curve == .SECP256K1 {
+                for backupSharePair in wallet.backupSharePairs {
+                    if backupSharePair.status == .completed, backupSharePair.backupMethod == method {
+                        return wallet.id
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func prepareEject(walletId: String, custodianApiKey: String) async throws {
+        guard let portal = portal else { return }
+        guard let client = try await portal.client else {
+            throw NSError(domain: "PortalWrapper", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not get Client"])
+        }
+        let clientId = client.id
+        
+        let urlString = "https://api.portalhq.io/api/v3/custodians/me/clients/\(clientId)/prepare-eject"
+        guard let url = URL(string: urlString) else {
+            throw NSError(domain: "PortalWrapper", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(custodianApiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = ["walletId": walletId]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            let responseBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NSError(domain: "PortalWrapper", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Prepare Eject Failed: \(responseBody)"])
+        }
+    }
 }

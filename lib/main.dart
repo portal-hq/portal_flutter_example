@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'portal_wallet_viewmodel.dart';
 import 'ui_components.dart';
@@ -157,6 +158,84 @@ class _PortalHackathonKitState extends State<PortalHackathonKit> {
                         },
                         onBackupWalletClick: (password) {
                           portalWalletViewModel.backupWallet(password);
+                        },
+                          onEjectWalletClick: (password) async {
+                          try {
+                            final privateKeysString = await portalWalletViewModel.eject(password);
+                            
+                            String displayKey = privateKeysString;
+                            
+                            if (privateKeysString.contains("eip155")) {
+                              final parts = privateKeysString.split(",");
+                              for (final part in parts) {
+                                if (part.contains("eip155")) {
+                                  final keyPart = part.split(":")[1].trim();
+                                  // Remove potential braces
+                                  displayKey = keyPart.replaceAll("}", "").replaceAll("{", "").trim();
+                                  break;
+                                }
+                              }
+                            }
+                            
+                            // Append 0x if missing
+                            if (!displayKey.startsWith("0x")) {
+                              displayKey = "0x$displayKey";
+                            }
+
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Private Key"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "WARNING: Do not share this key with anyone!",
+                                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text("Private Key (EIP-155):", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      Row(
+                                        children: [
+                                          Expanded(child: SelectableText(displayKey)),
+                                          IconButton(
+                                            icon: const Icon(Icons.copy),
+                                            onPressed: () {
+                                              Clipboard.setData(ClipboardData(text: displayKey));
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text("Private key copied to clipboard")),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text("Verify Address:", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      const SelectableText(
+                                        "https://toolkit.abdk.consulting/ethereum#recover-address,key-to-address",
+                                        style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text("Close"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Eject failed: $e")),
+                              );
+                            }
+                          }
                         },
                         onSwapClick: (buyToken, sellToken, amount) {
                           portalWalletViewModel.swap(buyToken, sellToken, amount);

@@ -60,6 +60,7 @@ import UIKit
                         result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected a String for recovery method", details: nil))
                     }
 
+
                 case "swap":
                     if let args = call.arguments as? [String: Any],
                        let swapsApiKey = args["swapsApiKey"] as? String,
@@ -70,6 +71,15 @@ import UIKit
                         PortalWrapper.swap(swapsApiKey: swapsApiKey, chainId: chainId, buyToken: buyToken, sellToken: sellToken, amount: amount, result: result)
                     } else {
                         result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for swap", details:   nil))
+                    }
+
+                case "eject":
+                    if let args = call.arguments as? [String: Any],
+                       let method = args["backupMethod"] as? String,
+                       let custodianApiKey = args["custodianApiKey"] as? String {
+                        PortalWrapper.eject(backupMethod: method, custodianApiKey: custodianApiKey, result: result)
+                    } else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for eject", details: nil))
                     }
 
                 default:

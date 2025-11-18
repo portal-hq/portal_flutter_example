@@ -59,16 +59,23 @@ flutter pub get
 
 
 ### 3. Configure the API Keys
-Update the API keys in `lib/constants.dart` with your Portal client API key and swaps API key:
+Create a `lib/secrets.dart` file by copying the example file and adding your API keys:
+
+```bash
+cp lib/secrets_example.dart lib/secrets.dart
+```
+
+Then update `lib/secrets.dart` with your Portal API keys:
 
 ```dart
-class Constants {
+class Secrets {
   static const String PORTAL_CLIENT_API_KEY = "your-portal-api-key-here";
   static const String SWAPS_API_KEY = "your-swaps-api-key-here";
+  static const String CUSTODIAN_API_KEY = "your-custodian-api-key-here";
 }
 ```
 
-The app will automatically use these keys when initializing the Portal SDK and performing token swaps.
+The `secrets.dart` file is gitignored to keep your API keys secure. The app will automatically use these keys when initializing the Portal SDK and performing token swaps.
 
 
 ### 4. Run the App

@@ -120,6 +120,32 @@ class PortalWalletViewModel extends ChangeNotifier {
     }
   }
 
+  // MARK: - Eject Wallet
+  Future<String> eject(String password) async {
+    if (password.isEmpty) {
+      print("❌ please enter valid password to continue.");
+      throw Exception("Password cannot be empty");
+    }
+
+    _setState(WalletUIState.loading);
+
+    try {
+      await platform.invokeMethod('setPassword', password);
+      final privateKeys = await platform.invokeMethod('eject', {
+        'backupMethod': 'Password',
+        'custodianApiKey': Constants.CUSTODIAN_API_KEY,
+      });
+      
+      print("✅ Wallet ejected successfully. Keys: $privateKeys");
+      _setState(WalletUIState.generated);
+      return privateKeys.toString();
+    } catch (e) {
+      _setState(WalletUIState.generated);
+      print("❌ Unable to eject the wallet with error: $e");
+      rethrow;
+    }
+  }
+
   // MARK: - Swap
   Future<void> swap(String buyToken, String sellToken, String amount) async {
     _isSwapLoading = true;
