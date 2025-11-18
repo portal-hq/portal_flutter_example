@@ -225,6 +225,7 @@ class PortalWalletView extends StatefulWidget {
   final VoidCallback? onCopyAddressClick;
   final VoidCallback? onCopyEthereumAddressClick;
   final Function(String)? onBackupWalletClick;
+  final Function(String)? onEjectWalletClick;
   final Function(String buyToken, String sellToken, String amount)? onSwapClick;
   final bool isSwapLoading;
 
@@ -235,6 +236,7 @@ class PortalWalletView extends StatefulWidget {
     this.onCopyAddressClick,
     this.onCopyEthereumAddressClick,
     this.onBackupWalletClick,
+    this.onEjectWalletClick,
     this.onSwapClick,
     this.isSwapLoading = false,
   }) : super(key: key);
@@ -246,6 +248,8 @@ class PortalWalletView extends StatefulWidget {
 class _PortalWalletViewState extends State<PortalWalletView> {
   bool showPasswordAlert = false;
   String backupPassword = '';
+  bool showEjectAlert = false;
+  String ejectPassword = '';
   bool showSwapAlert = false;
   String buyToken = 'USDC';
   String sellToken = 'ETH';
@@ -282,6 +286,24 @@ class _PortalWalletViewState extends State<PortalWalletView> {
                 cornerRadius: 22.5,
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          
+          // Eject Button
+          Align(
+            alignment: Alignment.centerRight,
+            child: PortalButton(
+              title: "Eject Wallet",
+              style: ButtonStyle.secondary,
+              onPress: () {
+                setState(() {
+                  showEjectAlert = true;
+                });
+              },
+              width: 160,
+              height: 45,
+              cornerRadius: 22.5,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -381,6 +403,7 @@ class _PortalWalletViewState extends State<PortalWalletView> {
           ),
 
           if (showSwapAlert) _buildSwapAlert(),
+          if (showEjectAlert) _buildEjectAlert(),
         ],
       ),
     );
@@ -497,6 +520,48 @@ class _PortalWalletViewState extends State<PortalWalletView> {
                   ),
                 )
               : const Text("Submit"),
+        ),
+      ],
+    );
+  }
+  Widget _buildEjectAlert() {
+    return AlertDialog(
+      title: const Text("Eject Wallet"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Enter your password to eject your private key."),
+          const SizedBox(height: 10),
+          TextField(
+            onChanged: (value) {
+              ejectPassword = value;
+            },
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: "PASSWORD",
+              hintText: "Enter password",
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() {
+              showEjectAlert = false;
+            });
+          },
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onEjectWalletClick?.call(ejectPassword);
+            setState(() {
+              showEjectAlert = false;
+            });
+          },
+          child: const Text("Eject"),
         ),
       ],
     );
