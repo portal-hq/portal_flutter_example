@@ -342,7 +342,7 @@ class PortalWrapper {
                 
                 result([
                     "success": true,
-                    "transactionHash": transactionHash.txHash
+                    "transactionHash": response.txHash
                 ])
             } catch {
                 result(FlutterError(code: "FAILED",
