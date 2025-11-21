@@ -227,7 +227,10 @@ class PortalWalletView extends StatefulWidget {
   final Function(String)? onBackupWalletClick;
   final Function(String)? onEjectWalletClick;
   final Function(String buyToken, String sellToken, String amount)? onSwapClick;
+  final Function(String to, String amount, String chainId, String token)? onSendAssetClick;
+  final Function(String chainId)? onReceiveTestnetAssetClick;
   final bool isSwapLoading;
+  final String? error;
 
   const PortalWalletView({
     Key? key,
@@ -238,7 +241,10 @@ class PortalWalletView extends StatefulWidget {
     this.onBackupWalletClick,
     this.onEjectWalletClick,
     this.onSwapClick,
+    this.onSendAssetClick,
+    this.onReceiveTestnetAssetClick,
     this.isSwapLoading = false,
+    this.error,
   }) : super(key: key);
 
   @override
@@ -254,6 +260,12 @@ class _PortalWalletViewState extends State<PortalWalletView> {
   String buyToken = 'USDC';
   String sellToken = 'ETH';
   String amount = '10000000000000';
+  
+  bool showSendAssetAlert = false;
+  String sendTo = '';
+  String sendAmount = '0.0001';
+  String sendChainId = 'eip155:11155111'; // Sepolia
+  String sendToken = 'NATIVE';
 
   @override
   Widget build(BuildContext context) {
@@ -401,9 +413,54 @@ class _PortalWalletViewState extends State<PortalWalletView> {
                     cornerRadius: 21,
                   ),
           ),
+          
+          const SizedBox(height: 12),
+
+          // Send Asset button
+          Align(
+            alignment: Alignment.center,
+            child: PortalButton(
+              title: "Send Asset",
+              onPress: () {
+                setState(() {
+                  showSendAssetAlert = true;
+                });
+              },
+              width: 160,
+              height: 42,
+              cornerRadius: 21,
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+
+          // Fund with Testnet button
+          Align(
+            alignment: Alignment.center,
+            child: PortalButton(
+              title: "Fund with Testnet",
+              onPress: () {
+                widget.onReceiveTestnetAssetClick?.call("eip155:11155111"); // Default to Sepolia
+              },
+              width: 200,
+              height: 42,
+              cornerRadius: 21,
+            ),
+          ),
+
+          if (widget.error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Text(
+                widget.error!,
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ),
 
           if (showSwapAlert) _buildSwapAlert(),
           if (showEjectAlert) _buildEjectAlert(),
+          if (showSendAssetAlert) _buildSendAssetAlert(),
         ],
       ),
     );
@@ -562,6 +619,73 @@ class _PortalWalletViewState extends State<PortalWalletView> {
             });
           },
           child: const Text("Eject"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSendAssetAlert() {
+    return AlertDialog(
+      title: const Text("Send Asset"),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              onChanged: (v) => sendChainId = v,
+              controller: TextEditingController(text: sendChainId),
+              decoration: const InputDecoration(
+                labelText: "Chain ID",
+                hintText: "e.g. eip155:11155111",
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (v) => sendTo = v,
+              decoration: const InputDecoration(
+                labelText: "To Address",
+                hintText: "0x...",
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (v) => sendAmount = v,
+              controller: TextEditingController(text: sendAmount),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Amount",
+                hintText: "e.g. 0.0001",
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              onChanged: (v) => sendToken = v,
+              controller: TextEditingController(text: sendToken),
+              decoration: const InputDecoration(
+                labelText: "Token",
+                hintText: "e.g. NATIVE",
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            setState(() {
+              showSendAssetAlert = false;
+            });
+          },
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onSendAssetClick?.call(sendTo, sendAmount, sendChainId, sendToken);
+            setState(() {
+              showSendAssetAlert = false;
+            });
+          },
+          child: const Text("Send"),
         ),
       ],
     );
