@@ -321,4 +321,65 @@ class PortalWrapper {
             throw NSError(domain: "PortalWrapper", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Prepare Eject Failed: \(responseBody)"])
         }
     }
+    static func sendAsset(chainId: String, to: String, amount: String, token: String, signatureApprovalMemo: String?, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let params = SendAssetParams(
+                    to: to,
+                    amount: amount,
+                    token: token,
+                    signatureApprovalMemo: signatureApprovalMemo
+                )
+                
+                let transactionHash = try await portal.sendAsset(chainId: chainId, params: params)
+                
+                result([
+                    "success": true,
+                    "transactionHash": transactionHash.txHash
+                ])
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error sending asset: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
+    
+    static func receiveTestnetAsset(chainId: String, amount: String, token: String, result: @escaping FlutterResult) {
+        guard let portal = portal else {
+            result(FlutterError(code: "UNAVAILABLE",
+                                message: "Portal is not initialized",
+                                details: nil))
+            return
+        }
+        
+        Task {
+            do {
+                let params = FundParams(amount: amount, token: token)
+                let response = try await portal.receiveTestnetAsset(chainId: chainId, params: params)
+                
+                if let data = response.data {
+                    result([
+                        "success": true,
+                        "transactionHash": data.txHash
+                    ])
+                } else {
+                    result(FlutterError(code: "FAILED",
+                                        message: "Error receiving testnet asset: \(response.error?.message ?? "Unknown error")",
+                                        details: nil))
+                }
+            } catch {
+                result(FlutterError(code: "FAILED",
+                                    message: "Error receiving testnet asset: \(error.localizedDescription)",
+                                    details: nil))
+            }
+        }
+    }
 }

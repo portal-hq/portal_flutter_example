@@ -21,6 +21,7 @@ class PortalWalletViewModel extends ChangeNotifier {
   String? solanaAddress;
   String? ethereumAddress;
   String? transactionHash;
+  String? error;
 
   // UI State
   WalletUIState _state = WalletUIState.loading;
@@ -175,6 +176,61 @@ class PortalWalletViewModel extends ChangeNotifier {
     }
   }
 
+  // MARK: - Send Asset
+  Future<void> sendAsset(String to, String amount, String chainId, {String token = "NATIVE", String? signatureApprovalMemo}) async {
+    _setState(WalletUIState.loading);
+    
+    try {
+      final result = await platform.invokeMethod('sendAsset', {
+        'chainId': chainId,
+        'to': to,
+        'amount': amount,
+        'token': token,
+        'signatureApprovalMemo': signatureApprovalMemo,
+      });
+      
+      print("✅ sendAsset result: $result");
+      
+      if (result != null && result is Map && result['transactionHash'] != null) {
+        transactionHash = result['transactionHash'];
+      }
+      
+      _setState(WalletUIState.generated);
+    } on PlatformException catch (e) {
+      final cleanMessage = _extractErrorMessage(e.message);
+      print("❌ Send Asset failed: $cleanMessage");
+      error = cleanMessage;
+      _setState(WalletUIState.generated);
+    } catch (e) {
+      print("❌ Send Asset failed: $e");
+      error = e.toString();
+      _setState(WalletUIState.generated);
+    }
+  }
+
+  // MARK: - Receive Testnet Asset
+  Future<void> receiveTestnetAsset(String chainId) async {
+    _setState(WalletUIState.loading);
+    
+    try {
+      final result = await platform.invokeMethod('receiveTestnetAsset', {
+        'chainId': chainId,
+      });
+      
+      print("✅ receiveTestnetAsset result: $result");
+      
+      if (result != null && result is Map && result['transactionHash'] != null) {
+        transactionHash = result['transactionHash'];
+      }
+      
+      _setState(WalletUIState.generated);
+    } catch (e) {
+      print("❌ Receive Testnet Asset failed: $e");
+      _setState(WalletUIState.generated);
+      rethrow;
+    }
+  }
+
   // MARK: - Copy Helpers
   Future<void> copyAddress() async {
     if (solanaAddress != null) {
@@ -204,5 +260,18 @@ class PortalWalletViewModel extends ChangeNotifier {
   void _setState(WalletUIState newState) {
     _state = newState;
     notifyListeners();
+  }
+
+  String _extractErrorMessage(String? message) {
+    if (message == null) return "Unknown error";
+    
+    // Try to extract "message: ..." part
+    final messageRegex = RegExp(r'-message:\s*(.*?)(?:,|$)');
+    final match = messageRegex.firstMatch(message);
+    if (match != null && match.group(1) != null) {
+      return match.group(1)!.trim();
+    }
+    
+    return message;
   }
 }

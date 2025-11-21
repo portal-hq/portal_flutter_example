@@ -82,6 +82,28 @@ import UIKit
                         result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for eject", details: nil))
                     }
 
+                case "sendAsset":
+                    if let args = call.arguments as? [String: Any],
+                       let chainId = args["chainId"] as? String,
+                       let to = args["to"] as? String,
+                       let amount = args["amount"] as? String {
+                        let token = args["token"] as? String ?? "NATIVE"
+                        let signatureApprovalMemo = args["signatureApprovalMemo"] as? String
+                        PortalWrapper.sendAsset(chainId: chainId, to: to, amount: amount, token: token, signatureApprovalMemo: signatureApprovalMemo, result: result)
+                    } else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for sendAsset", details: nil))
+                    }
+
+                case "receiveTestnetAsset":
+                    if let args = call.arguments as? [String: Any],
+                       let chainId = args["chainId"] as? String {
+                        let amount = args["amount"] as? String ?? "0.001" // Default amount
+                        let token = args["token"] as? String ?? "ETH" // Default token
+                        PortalWrapper.receiveTestnetAsset(chainId: chainId, amount: amount, token: token, result: result)
+                    } else {
+                        result(FlutterError(code: "INVALID_ARGUMENT", message: "Expected proper arguments for receiveTestnetAsset", details: nil))
+                    }
+
                 default:
                     result(FlutterMethodNotImplemented)
                 }

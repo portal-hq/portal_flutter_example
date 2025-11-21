@@ -240,7 +240,14 @@ class _PortalHackathonKitState extends State<PortalHackathonKit> {
                         onSwapClick: (buyToken, sellToken, amount) {
                           portalWalletViewModel.swap(buyToken, sellToken, amount);
                         },
+                        onSendAssetClick: (to, amount, chainId, token) {
+                          portalWalletViewModel.sendAsset(to, amount, chainId, token: token);
+                        },
+                        onReceiveTestnetAssetClick: (chainId) {
+                          portalWalletViewModel.receiveTestnetAsset(chainId);
+                        },
                         isSwapLoading: portalWalletViewModel.isSwapLoading,
+                        error: portalWalletViewModel.error,
                       ),
 
                       const SizedBox(height: 30),
