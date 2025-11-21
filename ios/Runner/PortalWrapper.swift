@@ -338,7 +338,7 @@ class PortalWrapper {
                     signatureApprovalMemo: signatureApprovalMemo
                 )
                 
-                let transactionHash = try await portal.sendAsset(chainId: chainId, params: params)
+                let response = try await portal.sendAsset(chainId: chainId, params: params)
                 
                 result([
                     "success": true,
